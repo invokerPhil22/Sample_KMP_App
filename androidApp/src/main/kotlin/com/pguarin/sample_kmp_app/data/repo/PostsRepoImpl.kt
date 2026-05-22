@@ -9,8 +9,18 @@ class PostsRepoImpl(
     private val postsApi: PostsApi,
 ) : PostsRepo {
     override suspend fun getPosts(): List<PostsModel> {
-        return postsApi.getPosts().map { postDto ->
-            postDto.toDomain()
+        val response = postsApi.getPosts()
+
+        val statusCode = response.code()
+        val message = response.message()
+        val headers = response.headers()
+
+        return if (response.isSuccessful) {
+            response.body()?.map { postDto ->
+                postDto.toDomain()
+            } ?: emptyList()
+        } else {
+            throw Exception("API failed: $statusCode $message")
         }
     }
 }
